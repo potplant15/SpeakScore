@@ -1,0 +1,39 @@
+name: Docker Build and Run
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t speakscore-tts-service ./tts-service
+
+      - name: Start container
+        run: docker run -d --name speakscore-tts -p 8001:8001 speakscore-tts-service
+
+      - name: Wait for service
+        run: sleep 5
+
+      - name: Check health endpoint
+        run: curl --fail http://127.0.0.1:8001/health
+
+      - name: Check TTS endpoint
+        run: |
+          curl --fail \
+            -X POST \
+            http://127.0.0.1:8001/api/v1/tts \
+            -H "Content-Type: application/json" \
+            -d '{"text":"How are you today?"}' \
+            --output test.mp3
+
+          test -s test.mp3
+          file test.mp3

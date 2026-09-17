@@ -1,10 +1,7 @@
 name: Docker Build and Run
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
+  workflow_dispatch:
 
 jobs:
   docker:
@@ -12,7 +9,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Build Docker image
         run: docker build -t speakscore-tts-service ./tts-service

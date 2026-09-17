@@ -1,0 +1,4 @@
+# Project-wide runtime dependencies
+fastapi
+uvicorn[standard]
+gTTS

@@ -1,0 +1,25 @@
+# Python virtual environments
+.venv/
+venv/
+env/
+
+# Python cache and test artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Generated audio files
+*.mp3
+*.wav
+
+# Local environment and editor files
+.env
+.env.*
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db

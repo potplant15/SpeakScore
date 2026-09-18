@@ -1,0 +1,18 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/speakscore?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    username: ${SPRING_DATASOURCE_USERNAME:speakscore}
+    password: ${SPRING_DATASOURCE_PASSWORD:SpeakScore123!}
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:update}
+    open-in-view: false
+
+services:
+  kokoro:
+    base-url: ${KOKORO_SERVICE_URL:http://localhost:8001}
+  evaluation:
+    base-url: ${EVALUATION_SERVICE_URL:http://localhost:8002}

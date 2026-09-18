@@ -10,3 +10,18 @@
 - 添加 GitHub Actions，完成 Docker 构建和接口测试。
 
 当前进度：TTS Service 第一版开发完成，Docker 云端测试通过。
+
+## DAY2 / 9.19
+
+- 完成 Practice Service 第一版基础结构。
+- 配置 Java 21、Spring Boot 3.5、Maven 和 MySQL 相关环境。
+- 实现练习创建、查询、分页历史和标准音频接口。
+- 接入 Kokoro Service 和 Evaluation Service。
+- 实现练习状态管理、评分结果保存和 MySQL 持久化。
+- 完成 Kokoro Service 改造，支持英音、美音以及不同性别声音选择。
+- 更新 Kokoro Service 依赖和 Dockerfile，完成音频生成测试。
+- 完成 Evaluation Service 改造，接入 OpenPronounce 进行发音评分。
+- 完善 Evaluation Service 的音频识别、音素分析和评分结果返回。
+- 配置 Maven 阿里云镜像并完成项目编译打包。
+
+当前进度：Practice Service 基础功能完成，下一步进行三个服务的联调测试，并补充 Java 测试用例。

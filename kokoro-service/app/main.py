@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from app.api.tts import router as tts_router
 
 
-app = FastAPI(title="SpeakScore TTS Service", version="0.1.0")
+app = FastAPI(title="SpeakScore Kokoro Service", version="0.1.0")
 
 
 @app.get("/health")

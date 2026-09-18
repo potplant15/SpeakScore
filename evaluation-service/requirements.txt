@@ -1,0 +1,10 @@
+# Evaluation service runtime dependencies
+fastapi
+uvicorn[standard]
+python-multipart
+faster-whisper
+jiwer
+torch>=2.0
+openpronounce>=0.3.0
+phonemizer>=3.4.0
+Levenshtein>=0.20

@@ -9,20 +9,24 @@ from app.schemas.tts import TTSRequest
 def test_health():
     # Verify the health response and application metadata.
     assert health() == {"status": "ok"}
-    assert app.title == "SpeakScore TTS Service"
+    assert app.title == "SpeakScore Kokoro Service"
     assert app.version == "0.1.0"
 
 
 def test_tts_returns_mp3(monkeypatch):
     class FakeTTSService:
         # Return deterministic fake audio for the API test.
-        def synthesize(self, text: str) -> BytesIO:
+        def synthesize(self, text: str, accent: str, gender: str) -> BytesIO:
             assert text == "How are you today?"
+            assert accent == "en-US"
+            assert gender == "female"
             return BytesIO(b"fake-mp3-data")
 
-    monkeypatch.setattr(tts_api, "tts_service", FakeTTSService())
+    monkeypatch.setattr(tts_api, "kokoro_service", FakeTTSService())
 
-    response = generate_speech(TTSRequest(text="How are you today?"))
+    response = generate_speech(
+        TTSRequest(text="How are you today?", accent="en-US", gender="female")
+    )
 
     assert response.media_type == "audio/mpeg"
     assert response.body_iterator is not None

@@ -9,6 +9,7 @@ __pycache__/
 .pytest_cache/
 .coverage
 htmlcov/
+:memory:.ses
 
 # Generated audio files
 *.mp3

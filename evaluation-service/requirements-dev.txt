@@ -1,0 +1,4 @@
+# Evaluation service development dependencies
+-r requirements.txt
+pytest
+httpx

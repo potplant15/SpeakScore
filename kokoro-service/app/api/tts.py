@@ -2,16 +2,16 @@ from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
 from app.schemas.tts import TTSRequest
-from app.services.tts_service import TTSService
+from app.services.kokoro_service import KokoroService
 
 
 router = APIRouter()
-tts_service = TTSService()
+kokoro_service = KokoroService()
 
 
 @router.post("/tts")
 def generate_speech(request: TTSRequest):
-    # Generate and stream MP3 audio for the requested text.
-    audio = tts_service.synthesize(request.text)
+    # Generate and stream MP3 audio for the requested text and voice.
+    audio = kokoro_service.synthesize(request.text, request.accent, request.gender)
 
     return StreamingResponse(audio, media_type="audio/mpeg")

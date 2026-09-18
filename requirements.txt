@@ -1,4 +1,17 @@
-# Project-wide runtime dependencies
+# Project-wide runtime dependencies (union of all services)
 fastapi
 uvicorn[standard]
-gTTS
+python-multipart
+click<8.2
+
+# Kokoro Service
+kokoro-onnx>=0.6.1
+soundfile>=0.14.0
+
+# Evaluation Service
+faster-whisper
+jiwer
+torch>=2.0
+openpronounce>=0.3.0
+phonemizer>=3.4.0
+Levenshtein>=0.20

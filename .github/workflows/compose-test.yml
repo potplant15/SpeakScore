@@ -36,6 +36,12 @@ jobs:
             -d '{"text":"How are you today?","accent":"en-US","gender":"female"}')
           echo "$response"
           echo "$response" | grep -q '"ipa"'
+          curl --fail \
+            -X POST http://127.0.0.1:8001/api/v1/tts \
+            -H "Content-Type: application/json" \
+            -d '{"text":"How are you today?","accent":"en-US","gender":"female"}' \
+            --output reference-test.mp3
+          test -s reference-test.mp3
 
       - name: Check Evaluation Service
         run: curl --fail http://127.0.0.1:8002/health

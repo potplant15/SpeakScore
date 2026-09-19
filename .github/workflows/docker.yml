@@ -38,6 +38,15 @@ jobs:
           echo "$response"
           echo "$response" | grep -q '"ipa"'
 
+      - name: Check Kokoro audio endpoint
+        run: |
+          curl --fail \
+            -X POST http://127.0.0.1:8001/api/v1/tts \
+            -H "Content-Type: application/json" \
+            -d '{"text":"How are you today?","accent":"en-US","gender":"female"}' \
+            --output test.mp3
+          test -s test.mp3
+
       - name: Remove container
         if: always()
         run: docker rm --force speakscore-reference || true

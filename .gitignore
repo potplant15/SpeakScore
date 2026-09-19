@@ -25,11 +25,6 @@ htmlcov/
 frontend/node_modules/
 frontend/dist/
 
-# Local Docker model caches and database data
-data/kokoro-models/*
-!data/kokoro-models/.gitkeep
-data/huggingface/*
-!data/huggingface/.gitkeep
 
 # OS files
 .DS_Store

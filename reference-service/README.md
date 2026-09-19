@@ -5,7 +5,7 @@ generates MP3 audio and eSpeak NG generates IPA text.
 
 ## Model files
 
-Keep the model files outside the repository:
+When running locally without Docker, keep the model files outside the repository:
 
 ```bash
 mkdir -p ~/kokoro-models
@@ -26,8 +26,10 @@ source ../.venv/bin/activate
 uvicorn app.main:app --reload --port 8001
 ```
 
-For a container run, mount the external model directory at
-`/root/kokoro-models` and publish port `8001`.
+When running with Docker Compose, the service downloads these files automatically
+on first startup and stores them in the named `kokoro-models` volume. Later
+starts reuse the cached files. The download URLs can be overridden with
+`KOKORO_MODEL_URL` and `KOKORO_VOICES_URL`.
 
 ## Generate speech
 

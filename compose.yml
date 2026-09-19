@@ -23,7 +23,7 @@ services:
       KOKORO_MODEL_PATH: /root/kokoro-models/kokoro-v1.0.onnx
       KOKORO_VOICES_PATH: /root/kokoro-models/voices-v1.0.bin
     volumes:
-      - ./data/kokoro-models:/root/kokoro-models:ro
+      - kokoro-models:/root/kokoro-models
     ports:
       - "8001:8001"
     healthcheck:
@@ -45,7 +45,7 @@ services:
       WHISPER_COMPUTE_TYPE: int8
       HF_HOME: /root/.cache/huggingface
     volumes:
-      - ./data/huggingface:/root/.cache/huggingface
+      - huggingface-cache:/root/.cache/huggingface
     ports:
       - "8002:8002"
     healthcheck:
@@ -87,3 +87,5 @@ services:
 
 volumes:
   mysql-data:
+  kokoro-models:
+  huggingface-cache:

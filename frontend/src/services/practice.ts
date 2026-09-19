@@ -1,5 +1,5 @@
 import { api } from './api'
-import type { CreatePracticeRequest, EvaluationResult, Practice, PronunciationReference } from '@/types/practice'
+import type { CreatePracticeRequest, EvaluationResult, Practice, PronunciationReference, Suggestion } from '@/types/practice'
 
 export async function createPractice(request: CreatePracticeRequest): Promise<Practice> {
   const response = await api.post<Practice>('/practices', request)
@@ -15,6 +15,11 @@ export async function getReferenceAudio(practiceId: number): Promise<Blob> {
 
 export async function getPronunciationReference(practiceId: number): Promise<PronunciationReference> {
   const response = await api.get<PronunciationReference>(`/practices/${practiceId}/reference`)
+  return response.data
+}
+
+export async function getSuggestions(prefix: string): Promise<Suggestion[]> {
+  const response = await api.get<Suggestion[]>('/suggestions', { params: { prefix } })
   return response.data
 }
 

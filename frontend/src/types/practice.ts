@@ -23,6 +23,13 @@ export interface PronunciationReference {
   ipa: string
 }
 
+export interface Suggestion {
+  word: string
+  translation?: string
+  phonetic?: string
+  pos?: string
+}
+
 export interface EvaluationResult {
   recognizedText: string
   contentAccuracy: number

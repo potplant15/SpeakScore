@@ -1,0 +1,34 @@
+name: Frontend Docker Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Build Docker image
+        run: docker build --tag speakscore-frontend ./frontend
+
+      - name: Start container
+        run: docker run --detach --name speakscore-frontend -p 4173:80 speakscore-frontend
+
+      - name: Wait for frontend
+        run: |
+          for attempt in {1..30}; do
+            curl --silent --fail http://127.0.0.1:4173/ && exit 0
+            sleep 2
+          done
+          docker logs speakscore-frontend
+          exit 1
+
+      - name: Check built page
+        run: curl --fail --silent http://127.0.0.1:4173/ | grep -q 'SpeakScore'
+
+      - name: Remove container
+        if: always()
+        run: docker rm --force speakscore-frontend || true

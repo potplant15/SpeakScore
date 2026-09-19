@@ -1,4 +1,4 @@
-name: Docker Build and Run
+name: Reference Service Docker Test
 
 on:
   workflow_dispatch:
@@ -12,25 +12,32 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Build Docker image
-        run: docker build -t speakscore-tts-service ./tts-service
+        run: docker build --tag speakscore-reference-service ./reference-service
 
       - name: Start container
-        run: docker run -d --name speakscore-tts -p 8001:8001 speakscore-tts-service
+        run: docker run --detach --name speakscore-reference -p 8001:8001 speakscore-reference-service
 
       - name: Wait for service
-        run: sleep 5
+        run: |
+          for attempt in {1..30}; do
+            curl --silent --fail http://127.0.0.1:8001/health && exit 0
+            sleep 2
+          done
+          docker logs speakscore-reference
+          exit 1
 
       - name: Check health endpoint
         run: curl --fail http://127.0.0.1:8001/health
 
-      - name: Check TTS endpoint
+      - name: Check pronunciation reference endpoint
         run: |
-          curl --fail \
-            -X POST \
-            http://127.0.0.1:8001/api/v1/tts \
+          response=$(curl --fail --silent \
+            -X POST http://127.0.0.1:8001/api/v1/reference \
             -H "Content-Type: application/json" \
-            -d '{"text":"How are you today?"}' \
-            --output test.mp3
+            -d '{"text":"How are you today?","accent":"en-US","gender":"female"}')
+          echo "$response"
+          echo "$response" | grep -q '"ipa"'
 
-          test -s test.mp3
-          file test.mp3
+      - name: Remove container
+        if: always()
+        run: docker rm --force speakscore-reference || true

@@ -1,0 +1,66 @@
+name: Practice Service Docker Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: speakscore
+          MYSQL_USER: speakscore
+          MYSQL_PASSWORD: SpeakScore123!
+          MYSQL_ROOT_PASSWORD: RootSpeakScore123!
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pRootSpeakScore123!"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Package application
+        working-directory: practice-service
+        run: mvn -B package -DskipTests
+
+      - name: Build Docker image
+        run: docker build --tag speakscore-practice-service ./practice-service
+
+      - name: Start container
+        run: |
+          docker run --detach --name speakscore-practice --network host \
+            -e SPRING_DATASOURCE_URL='jdbc:mysql://127.0.0.1:3306/speakscore?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true' \
+            -e SPRING_DATASOURCE_USERNAME=speakscore \
+            -e SPRING_DATASOURCE_PASSWORD='SpeakScore123!' \
+            speakscore-practice-service
+
+      - name: Wait for API and check practices endpoint
+        run: |
+          for attempt in {1..45}; do
+            if curl --silent --fail http://127.0.0.1:8080/api/v1/practices >/tmp/practices-response.json; then
+              cat /tmp/practices-response.json
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs speakscore-practice
+          exit 1
+
+      - name: Remove container
+        if: always()
+        run: docker rm --force speakscore-practice || true

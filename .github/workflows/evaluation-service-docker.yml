@@ -1,0 +1,34 @@
+name: Evaluation Service Docker Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Build Docker image
+        run: docker build --tag speakscore-evaluation-service ./evaluation-service
+
+      - name: Start container
+        run: docker run --detach --name speakscore-evaluation -p 8002:8002 speakscore-evaluation-service
+
+      - name: Wait for health endpoint
+        run: |
+          for attempt in {1..30}; do
+            curl --silent --fail http://127.0.0.1:8002/health && exit 0
+            sleep 2
+          done
+          docker logs speakscore-evaluation
+          exit 1
+
+      - name: Check OpenAPI endpoint
+        run: curl --fail --silent http://127.0.0.1:8002/openapi.json | grep -q 'Evaluation Service'
+
+      - name: Remove container
+        if: always()
+        run: docker rm --force speakscore-evaluation || true

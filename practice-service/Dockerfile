@@ -4,8 +4,9 @@ WORKDIR /build
 
 COPY pom.xml .
 COPY src ./src
+COPY maven-settings.xml /root/.m2/settings.xml
 
-RUN mvn -B package -DskipTests
+RUN mvn -B -s /root/.m2/settings.xml package -DskipTests
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app

@@ -45,3 +45,57 @@ h1 em { color: var(--coral); font-family: 'Fraunces', serif; font-weight: 500; l
 footer { max-width: 1000px; margin: 0 auto; padding: 22px 0 30px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; }
 @keyframes pulse { from { transform: scaleY(.7); } to { transform: scaleY(1.2); } } @keyframes breathe { 50% { box-shadow: 0 0 0 5px rgba(232,111,85,.1); } } @keyframes spin { to { transform: rotate(360deg); } }
 @media (max-width: 720px) { .app-shell { padding: 0 20px; }.topbar { height: 70px; }.session-chip { display: none; }.page-grid { display: block; padding: 46px 0 60px; }.side-note { display: none; }.intro-row { margin-bottom: 34px; }.progress-track { width: 105px; }.setup-card { padding: 28px 22px 26px; }.selector-grid { grid-template-columns: 1fr; gap: 18px; }.sentence-input, .sentence-autocomplete .p-autocomplete-input { font-size: 24px; }.suggestion-option { grid-template-columns: 1fr 1fr; }.suggestion-option small { grid-column: 1 / -1; }.sentence-field:has(.p-autocomplete-panel) { padding-bottom: 220px; }.recorder-card { grid-template-columns: 44px 1fr; padding: 18px; }.record-button { grid-column: 2; justify-self: start; }.recorded-playback { align-items: flex-start; flex-direction: column; gap: 10px; }.recorded-playback audio { width: 100%; }.reference-content { flex-wrap: wrap; }.waveform { min-width: 150px; }.listen-label { width: 100%; margin-left: 60px; }.result-heading h2 { font-size: 23px; }.score-ring { width: 66px; height: 66px; }.metric-row div + div { padding-left: 10px; }.metric-row strong { font-size: 17px; } footer { font-size: 9px; gap: 15px; } }
+@media (max-width: 480px) {
+  .app-shell { padding: 0 14px; }
+  .topbar { height: 62px; }
+  .brand { font-size: 16px; }
+  .brand-mark { width: 27px; height: 27px; }
+  .page-grid { padding: 32px 0 42px; }
+  .intro-row { align-items: flex-start; gap: 18px; margin-bottom: 28px; }
+  h1 { font-size: clamp(34px, 11vw, 48px); }
+  .progress-track { width: 86px; flex-wrap: wrap; justify-content: flex-end; gap: 4px; }
+  .progress-track span { width: 13px; }
+  .progress-track span.current { width: 20px; }
+  .progress-track small { width: 100%; margin: 2px 0 0; text-align: right; }
+  .setup-card { padding: 24px 17px 20px; }
+  .card-number { right: 17px; top: 20px; }
+  .sentence-input { min-height: 105px; padding-right: 0; font-size: 23px; }
+  .suggestion-tray { margin-top: 14px; }
+  .tray-heading { padding: 9px 10px; }
+  .suggestion-list { max-height: 250px; padding: 4px; }
+  .suggestion-item { grid-template-columns: minmax(0, 1fr); gap: 5px; padding: 10px; }
+  .suggestion-phonetic { grid-row: 2; white-space: normal; font-size: 10px; }
+  .suggestion-translation { grid-row: 3; }
+  .active-definition { padding: 10px; }
+  .segmented { flex-wrap: wrap; }
+  .segmented button { min-height: 42px; flex: 1 1 auto; }
+  .segmented.compact button { min-width: 0; }
+  .sentence-display { padding: 20px 18px 22px; }
+  .sentence-display p { font-size: 27px; overflow-wrap: anywhere; }
+  .reference-card { padding: 17px 18px; }
+  .reference-topline { gap: 10px; align-items: flex-start; }
+  .reference-content { gap: 11px; }
+  .waveform { min-width: 0; width: calc(100% - 54px); }
+  .listen-label { margin-left: 53px; }
+  .ipa-line { align-items: flex-start; flex-direction: column; gap: 7px; }
+  .ipa-line strong { font-size: 15px; line-height: 1.5; overflow-wrap: anywhere; }
+  .recorder-card { grid-template-columns: 40px minmax(0, 1fr); gap: 12px; padding: 16px; }
+  .recording-orbit { width: 40px; height: 40px; }
+  .recorder-copy strong { font-size: 16px; }
+  .recorder-copy small { line-height: 1.4; }
+  .record-button { grid-column: 1 / -1; width: 100%; }
+  .text-button { grid-column: 1 / -1; justify-self: start; }
+  .recording-help { grid-column: 1 / -1; }
+  .results-card { padding: 22px 18px 24px; }
+  .result-heading { align-items: center; }
+  .result-heading h2 { font-size: 21px; }
+  .score-ring { width: 60px; height: 60px; }
+  .score-ring strong { font-size: 22px; }
+  .metric-row { margin: 20px 0 16px; }
+  .metric-row div { padding: 11px 0; }
+  .metric-row div + div { padding-left: 8px; }
+  .metric-row strong { font-size: 16px; }
+  .heard-line p { font-size: 16px; overflow-wrap: anywhere; }
+  .coaching-note { padding: 10px; }
+  footer { flex-direction: column; gap: 8px; line-height: 1.4; }
+}

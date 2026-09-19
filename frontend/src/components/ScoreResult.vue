@@ -17,7 +17,7 @@ defineProps<{ result: EvaluationResult }>()
     <div class="heard-line"><span class="eyebrow">We heard</span><p>{{ result.recognizedText || 'No speech detected' }}</p></div>
     <div v-if="result.details?.pronunciation_errors?.length" class="coaching-note">
       <span class="note-pin">!</span>
-      <p><strong>One sound to revisit:</strong> {{ result.details.pronunciation_errors[0].word }} — heard <b>{{ result.details.pronunciation_errors[0].heard }}</b>, expected <b>{{ result.details.pronunciation_errors[0].expected }}</b>.</p>
+      <p><strong>Pronunciation detail:</strong> {{ result.details.pronunciation_errors[0].word }} — heard <b>/{{ result.details.pronunciation_errors[0].heard || '—' }}/</b>, expected <b>/{{ result.details.pronunciation_errors[0].expected || '—' }}/</b>.</p>
     </div>
   </section>
 </template>

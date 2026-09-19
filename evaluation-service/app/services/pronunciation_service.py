@@ -52,20 +52,41 @@ class PronunciationService:
                     return word
             return words[-1] if words else ""
 
+        # Aggregate individual edits by word so a replacement cannot cross a
+        # word boundary and produce misleading strings such as "aɪwʊ".
+        grouped: dict[str, dict] = {}
+        for tag, expected_index, heard_index in Levenshtein.editops(expected, heard):
+            # Insertions have no expected phone; attach them to the nearest
+            # preceding phone, or to the first word for an insertion at zero.
+            word_index = expected_index
+            if tag == "insert" and expected_index > 0:
+                word_index = expected_index - 1
+            word = word_for(word_index)
+            entry = grouped.setdefault(
+                word,
+                {"word": word, "expected": [], "heard": [], "confidences": []},
+            )
+
+            if tag in ("replace", "delete"):
+                entry["expected"].append(expected[expected_index])
+            if tag in ("replace", "insert") and heard_index < len(heard):
+                entry["heard"].append(heard[heard_index])
+                if heard_index < len(confidences):
+                    entry["confidences"].append(confidences[heard_index])
+
         errors = []
-        for tag, start, end, heard_start, heard_end in Levenshtein.opcodes(
-            expected, heard
-        ):
-            if tag == "equal":
-                continue
-            word = word_for(start)
-            actual_confidences = confidences[heard_start:heard_end]
-            confidence = sum(actual_confidences) / len(actual_confidences) if actual_confidences else 1.0
+        for entry in grouped.values():
+            confidence_values = entry["confidences"]
+            confidence = (
+                sum(confidence_values) / len(confidence_values)
+                if confidence_values
+                else 1.0
+            )
             errors.append(
                 {
-                    "word": word,
-                    "expected": "".join(expected[start:end]),
-                    "heard": "".join(heard[heard_start:heard_end]),
+                    "word": entry["word"],
+                    "expected": "".join(entry["expected"]),
+                    "heard": "".join(entry["heard"]),
                     "confidence": round(float(confidence), 3),
                 }
             )

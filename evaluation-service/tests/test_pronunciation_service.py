@@ -30,3 +30,18 @@ def test_pronunciation_alignment(monkeypatch, tmp_path):
     assert result["score"] == 75.0
     assert result["phoneme_error_rate"] == 0.25
     assert result["errors"][0]["word"] == "hello"
+
+
+def test_pronunciation_errors_do_not_cross_word_boundaries():
+    # Keep feedback readable when one alignment operation spans two words.
+    result = PronunciationService()._errors(
+        ["aɪ", "w", "ʊ", "d"],
+        ["a", "m", "u"],
+        [0.2, 0.3, 0.4],
+        ["i", "would"],
+        [["aɪ"], ["w", "ʊ", "d"]],
+    )
+
+    assert [error["word"] for error in result] == ["i", "would"]
+    assert result[0]["expected"] == "aɪ"
+    assert result[1]["expected"] == "wʊd"

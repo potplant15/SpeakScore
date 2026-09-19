@@ -1,0 +1,63 @@
+name: Docker Compose Stack Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  compose:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Build and start the stack
+        run: docker compose up --detach --build
+
+      - name: Wait for service health checks
+        run: |
+          for attempt in {1..60}; do
+            if curl --silent --fail http://127.0.0.1:8001/health >/dev/null \
+              && curl --silent --fail http://127.0.0.1:8002/health >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker compose ps
+          docker compose logs --no-color
+          exit 1
+
+      - name: Check Reference Service
+        run: |
+          curl --fail http://127.0.0.1:8001/health
+          response=$(curl --fail --silent \
+            -X POST http://127.0.0.1:8001/api/v1/reference \
+            -H "Content-Type: application/json" \
+            -d '{"text":"How are you today?","accent":"en-US","gender":"female"}')
+          echo "$response"
+          echo "$response" | grep -q '"ipa"'
+
+      - name: Check Evaluation Service
+        run: curl --fail http://127.0.0.1:8002/health
+
+      - name: Check Practice Service
+        run: |
+          for attempt in {1..45}; do
+            if curl --silent --fail http://127.0.0.1:8080/api/v1/practices; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker compose logs practice-service
+          exit 1
+
+      - name: Check Frontend
+        run: curl --fail --silent http://127.0.0.1:5173/ | grep -q 'SpeakScore'
+
+      - name: Show service status
+        if: always()
+        run: docker compose ps
+
+      - name: Stop the stack
+        if: always()
+        run: docker compose down --volumes

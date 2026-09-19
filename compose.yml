@@ -1,0 +1,89 @@
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: speakscore
+      MYSQL_USER: speakscore
+      MYSQL_PASSWORD: SpeakScore123!
+      MYSQL_ROOT_PASSWORD: RootSpeakScore123!
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -pRootSpeakScore123!"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  reference-service:
+    build:
+      context: ./reference-service
+    environment:
+      KOKORO_MODEL_PATH: /root/kokoro-models/kokoro-v1.0.onnx
+      KOKORO_VOICES_PATH: /root/kokoro-models/voices-v1.0.bin
+    volumes:
+      - ./data/kokoro-models:/root/kokoro-models:ro
+    ports:
+      - "8001:8001"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health')
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  evaluation-service:
+    build:
+      context: ./evaluation-service
+    environment:
+      OPENPRONOUNCE_DEVICE: cpu
+      WHISPER_DEVICE: cpu
+      WHISPER_COMPUTE_TYPE: int8
+      HF_HOME: /root/.cache/huggingface
+    volumes:
+      - ./data/huggingface:/root/.cache/huggingface
+    ports:
+      - "8002:8002"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8002/health')
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  practice-service:
+    build:
+      context: ./practice-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/speakscore?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: speakscore
+      SPRING_DATASOURCE_PASSWORD: SpeakScore123!
+      REFERENCE_SERVICE_URL: http://reference-service:8001
+      EVALUATION_SERVICE_URL: http://evaluation-service:8002
+    depends_on:
+      mysql:
+        condition: service_healthy
+      reference-service:
+        condition: service_healthy
+      evaluation-service:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+    depends_on:
+      - practice-service
+    ports:
+      - "5173:80"
+
+volumes:
+  mysql-data:

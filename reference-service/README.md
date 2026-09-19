@@ -1,6 +1,7 @@
-# SpeakScore Kokoro Service
+# SpeakScore Reference Service
 
-This service generates English MP3 audio with Kokoro-ONNX.
+This service provides standard English pronunciation references: Kokoro-ONNX
+generates MP3 audio and eSpeak NG generates IPA text.
 
 ## Model files
 
@@ -20,7 +21,7 @@ The service reads these paths by default. They can be overridden with
 ## Run
 
 ```bash
-cd ~/SpeakScore/kokoro-service
+cd ~/SpeakScore/reference-service
 source ../.venv/bin/activate
 uvicorn app.main:app --reload --port 8001
 ```
@@ -35,6 +36,14 @@ curl -X POST http://127.0.0.1:8001/api/v1/tts \
   -H 'Content-Type: application/json' \
   -d '{"text":"I would like some water.","accent":"en-US","gender":"female"}' \
   --output kokoro-test.mp3
+```
+
+## Generate IPA reference
+
+```bash
+curl -X POST http://127.0.0.1:8001/api/v1/reference \
+  -H 'Content-Type: application/json' \
+  -d '{"text":"I would like some water.","accent":"en-US"}'
 ```
 
 Supported voice mapping:

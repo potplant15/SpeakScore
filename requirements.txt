@@ -4,7 +4,7 @@ uvicorn[standard]
 python-multipart
 click<8.2
 
-# Kokoro Service
+# Reference Service
 kokoro-onnx>=0.6.1
 soundfile>=0.14.0
 

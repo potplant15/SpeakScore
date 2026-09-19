@@ -17,6 +17,7 @@ public class PracticeController {
     public PracticeController(PracticeService s){service=s;}
     @PostMapping public ResponseEntity<PracticeResponse> create(@Valid @RequestBody CreateRequest req){Practice p=service.create(req);return ResponseEntity.status(HttpStatus.CREATED).body(view(p,null));}
     @GetMapping("/{id}/audio") public ResponseEntity<ByteArrayResource> audio(@PathVariable long id){return ResponseEntity.ok().contentType(MediaType.valueOf("audio/mpeg")).body(new ByteArrayResource(service.audio(id)));}
+    @GetMapping("/{id}/reference") public ReferenceResponse reference(@PathVariable long id){return service.reference(id);}
     @PostMapping("/{id}/evaluate") public EvaluationSummary evaluate(@PathVariable long id,@RequestPart("audio") MultipartFile audio){return summary(service.evaluate(id,audio));}
     @GetMapping("/{id}") public PracticeResponse get(@PathVariable long id){Practice p=service.get(id);return view(p,service.result(id));}
     @GetMapping public Page<PracticeResponse> list(@PageableDefault(size=20,sort="createdAt",direction=Sort.Direction.DESC) Pageable page){return service.list(page).map(p->view(p,service.result(p.getId())));}

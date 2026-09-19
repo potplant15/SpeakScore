@@ -12,7 +12,7 @@ spring:
     open-in-view: false
 
 services:
-  kokoro:
-    base-url: ${KOKORO_SERVICE_URL:http://localhost:8001}
+  reference:
+    base-url: ${REFERENCE_SERVICE_URL:http://localhost:8001}
   evaluation:
     base-url: ${EVALUATION_SERVICE_URL:http://localhost:8002}

@@ -7,7 +7,7 @@ import soundfile as sf
 from kokoro_onnx import Kokoro
 
 
-class KokoroService:
+class AudioService:
     # Convert English text into an MP3 stream with a selected Kokoro voice.
     VOICE_MAP = {
         ("en-US", "female"): "af_heart",

@@ -13,11 +13,12 @@ import java.io.IOException;
 
 @Service
 public class PracticeService {
-    private final PracticeRepository practices; private final EvaluationResultRepository results; private final KokoroClient kokoro; private final EvaluationClient evaluation; private final ObjectMapper mapper;
-    public PracticeService(PracticeRepository p,EvaluationResultRepository r,KokoroClient k,EvaluationClient e,ObjectMapper m){practices=p;results=r;kokoro=k;evaluation=e;mapper=m;}
+    private final PracticeRepository practices; private final EvaluationResultRepository results; private final ReferenceClient reference; private final EvaluationClient evaluation; private final ObjectMapper mapper;
+    public PracticeService(PracticeRepository p,EvaluationResultRepository resultRepository,ReferenceClient referenceClient,EvaluationClient e,ObjectMapper m){practices=p;results=resultRepository;reference=referenceClient;evaluation=e;mapper=m;}
     @Transactional public Practice create(CreateRequest req){return practices.save(new Practice(req.text(),req.accent(),req.gender()));}
     @Transactional(readOnly=true) public Practice get(long id){return practices.findById(id).orElseThrow(()->new IllegalArgumentException("Practice not found: "+id));}
-    public byte[] audio(long id){Practice p=get(id);return kokoro.synthesize(p.getReferenceText(),p.getAccent(),p.getGender());}
+    public byte[] audio(long id){Practice p=get(id);return reference.synthesize(p.getReferenceText(),p.getAccent(),p.getGender());}
+    public ReferenceResponse reference(long id){Practice p=get(id);return reference.pronunciationReference(p.getReferenceText(),p.getAccent());}
     @Transactional public EvaluationResult evaluate(long id,MultipartFile file){
         Practice p=get(id);p.setStatus(Practice.Status.EVALUATING);practices.save(p);
         try { EvaluationResponse r=evaluation.evaluate(p.getReferenceText(),p.getAccent(),file.getBytes(),file.getOriginalFilename()==null?"recording":file.getOriginalFilename());

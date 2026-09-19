@@ -1,17 +1,5 @@
-# Project-wide runtime dependencies (union of all services)
-fastapi
-uvicorn[standard]
-python-multipart
-click<8.2
-
-# Reference Service
-kokoro-onnx>=0.6.1
-soundfile>=0.14.0
-
-# Evaluation Service
-faster-whisper
-jiwer
-torch>=2.0
-openpronounce>=0.3.0
-phonemizer>=3.4.0
-Levenshtein>=0.20
+# Project-wide Python runtime dependencies.
+# This aggregate file includes the runtime dependencies of both Python services.
+# Install it from the repository root.
+-r reference-service/requirements.txt
+-r evaluation-service/requirements.txt

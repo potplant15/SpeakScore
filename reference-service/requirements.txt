@@ -1,4 +1,4 @@
-# Reference service runtime dependencies
+# Reference Service runtime dependencies only.
 fastapi
 uvicorn[standard]
 kokoro-onnx>=0.6.1

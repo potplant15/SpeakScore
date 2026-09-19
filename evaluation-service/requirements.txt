@@ -1,4 +1,4 @@
-# Evaluation service runtime dependencies
+# Evaluation Service runtime dependencies only.
 fastapi
 uvicorn[standard]
 python-multipart

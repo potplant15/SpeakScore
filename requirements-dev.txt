@@ -1,4 +1,6 @@
-# Project-wide development dependencies
+# Project-wide Python development dependencies.
+# Java/Maven and frontend development dependencies are managed by pom.xml and
+# frontend/package.json respectively.
 -r requirements.txt
 pytest
 httpx

@@ -1,4 +1,4 @@
-# Reference service development dependencies
+# Reference Service development and test dependencies.
 -r requirements.txt
 pytest
 httpx

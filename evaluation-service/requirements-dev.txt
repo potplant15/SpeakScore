@@ -1,4 +1,4 @@
-# Evaluation service development dependencies
+# Evaluation Service development and test dependencies.
 -r requirements.txt
 pytest
 httpx

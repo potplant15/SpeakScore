@@ -7,15 +7,44 @@ const emit = defineEmits<{ recorded: [blob: Blob]; reset: [] }>()
 const { isRecording, audioBlob, elapsedSeconds, error, startRecording, stopRecording, resetRecording } = useRecorder()
 const timer = computed(() => `0${Math.floor(elapsedSeconds.value / 60)}:${String(elapsedSeconds.value % 60).padStart(2, '0')}`)
 const recordedAudioUrl = ref('')
+const fileInput = ref<HTMLInputElement | null>(null)
+const maxAudioSize = 10 * 1024 * 1024
 
 watch(audioBlob, (blob) => {
   if (recordedAudioUrl.value) URL.revokeObjectURL(recordedAudioUrl.value)
   recordedAudioUrl.value = blob ? URL.createObjectURL(blob) : ''
 })
 
-async function start() { await startRecording() }
+async function start() {
+  if (fileInput.value) fileInput.value.value = ''
+  await startRecording()
+}
 function stop() { stopRecording(); window.setTimeout(() => audioBlob.value && emit('recorded', audioBlob.value), 0) }
-function reset() { resetRecording(); emit('reset') }
+function handleFileChange(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  error.value = ''
+  const extension = file.name.slice(file.name.lastIndexOf('.')).toLowerCase()
+  const supportedExtension = ['.mp3', '.wav', '.webm', '.m4a'].includes(extension)
+  if ((!file.type.startsWith('audio/') && !supportedExtension) || file.size > maxAudioSize) {
+    error.value = file.size > maxAudioSize
+      ? 'Audio file is too large. Choose a file smaller than 10 MB.'
+      : 'Unsupported audio format. Use MP3, WAV, WEBM, or M4A.'
+    input.value = ''
+    return
+  }
+
+  audioBlob.value = file
+  elapsedSeconds.value = 0
+  emit('recorded', file)
+}
+function reset() {
+  resetRecording()
+  if (fileInput.value) fileInput.value.value = ''
+  emit('reset')
+}
 onBeforeUnmount(() => { if (recordedAudioUrl.value) URL.revokeObjectURL(recordedAudioUrl.value) })
 </script>
 
@@ -27,9 +56,13 @@ onBeforeUnmount(() => { if (recordedAudioUrl.value) URL.revokeObjectURL(recorded
       <strong>{{ isRecording ? 'Speak naturally' : audioBlob ? 'Nice take.' : 'Say it out loud' }}</strong>
       <small>{{ isRecording ? timer : audioBlob ? 'Your recording is ready to review.' : 'Take a breath, then press the microphone.' }}</small>
     </div>
-    <button v-if="!isRecording" class="record-button" :disabled="disabled" @click="start">
-      <span class="mic-mark">●</span>{{ audioBlob ? 'Record again' : 'Start recording' }}
-    </button>
+    <input ref="fileInput" type="file" accept="audio/*,.mp3,.wav,.webm,.m4a" hidden @change="handleFileChange" />
+    <div v-if="!isRecording" class="recorder-actions">
+      <button class="record-button" :disabled="disabled" @click="start">
+        <span class="mic-mark">●</span>{{ audioBlob ? 'Record again' : 'Start recording' }}
+      </button>
+      <button type="button" class="upload-button" :disabled="disabled" @click="fileInput?.click()">Upload audio</button>
+    </div>
     <button v-else class="record-button stop" @click="stop"><span class="stop-mark" /> Stop recording</button>
     <button v-if="audioBlob && !isRecording" class="text-button" @click="reset">Clear take</button>
     <div v-if="error" class="recording-help" role="alert">

@@ -28,7 +28,11 @@ export async function evaluatePractice(
   audio: Blob,
 ): Promise<EvaluationResult> {
   const formData = new FormData()
-  formData.append('audio', audio, 'recording.webm')
+  const extension = audio.type.includes('mpeg') ? 'mp3'
+    : audio.type.includes('wav') ? 'wav'
+      : audio.type.includes('mp4') || audio.type.includes('m4a') ? 'm4a'
+        : 'webm'
+  formData.append('audio', audio, `recording.${extension}`)
   const response = await api.post<EvaluationResult>(`/practices/${practiceId}/evaluate`, formData)
   return response.data
 }

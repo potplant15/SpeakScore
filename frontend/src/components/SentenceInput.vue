@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref } from 'vue'
 import { getSuggestions } from '@/services/practice'
 import type { Suggestion } from '@/types/practice'
 
@@ -11,6 +11,7 @@ const suggestions = ref<Suggestion[]>([])
 const activeIndex = ref(0)
 const loading = ref(false)
 let requestId = 0
+let debounceTimer: number | undefined
 const activeSuggestion = computed(() => suggestions.value[activeIndex.value])
 
 function currentWord(value: string) {
@@ -42,7 +43,10 @@ async function loadSuggestions(value: string) {
 function updateValue(event: Event) {
   const value = (event.target as HTMLInputElement).value
   emit('update:modelValue', value)
-  void loadSuggestions(value)
+  if (debounceTimer !== undefined) window.clearTimeout(debounceTimer)
+  debounceTimer = window.setTimeout(() => {
+    void loadSuggestions(value)
+  }, 160)
 }
 
 function applySuggestion(suggestion: Suggestion) {
@@ -71,6 +75,10 @@ function handleKeydown(event: KeyboardEvent) {
 function clearSuggestions() {
   window.setTimeout(() => { suggestions.value = [] }, 120)
 }
+
+onBeforeUnmount(() => {
+  if (debounceTimer !== undefined) window.clearTimeout(debounceTimer)
+})
 </script>
 
 <template>

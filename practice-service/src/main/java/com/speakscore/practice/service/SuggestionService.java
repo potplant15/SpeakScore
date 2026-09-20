@@ -18,7 +18,7 @@ public class SuggestionService {
     }
 
     public List<SuggestionResponse> suggest(String prefix) {
-        String normalized = prefix == null ? "" : prefix.trim();
+        String normalized = prefix == null ? "" : prefix.trim().toLowerCase();
         if (normalized.length() < 1 || normalized.length() > 32) {
             return List.of();
         }

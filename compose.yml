@@ -1,20 +1,36 @@
 services:
   mysql:
     image: mysql:8.0
+    command: --local-infile=1
     environment:
-      MYSQL_DATABASE: speakscore
-      MYSQL_USER: speakscore
-      MYSQL_PASSWORD: SpeakScore123!
-      MYSQL_ROOT_PASSWORD: RootSpeakScore123!
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     ports:
-      - "3306:3306"
+      - "127.0.0.1:3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -pRootSpeakScore123!"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 10
+
+  ecdict-loader:
+    build:
+      context: ./ecdict-loader
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      ECDICT_URL: ${ECDICT_URL}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ecdict-cache:/data
 
   reference-service:
     build:
@@ -25,7 +41,7 @@ services:
     volumes:
       - kokoro-models:/root/kokoro-models
     ports:
-      - "8001:8001"
+      - "127.0.0.1:8001:8001"
     healthcheck:
       test:
         - CMD
@@ -45,14 +61,14 @@ services:
       WHISPER_COMPUTE_TYPE: int8
       WHISPER_MODEL: /models/whisper
       HF_HOME: /root/.cache/huggingface
-      HF_ENDPOINT: https://hf-mirror.com
+      HF_ENDPOINT: ${HF_ENDPOINT}
       HF_HUB_OFFLINE: "1"
       TRANSFORMERS_OFFLINE: "1"
     volumes:
       - huggingface-cache:/root/.cache/huggingface
-      - /home/ubuntu/whisper-model:/models/whisper:ro
+      - ${WHISPER_MODEL_DIR}:/models/whisper:ro
     ports:
-      - "8002:8002"
+      - "127.0.0.1:8002:8002"
     healthcheck:
       test:
         - CMD
@@ -67,20 +83,22 @@ services:
     build:
       context: ./practice-service
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/speakscore?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-      SPRING_DATASOURCE_USERNAME: speakscore
-      SPRING_DATASOURCE_PASSWORD: SpeakScore123!
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
       REFERENCE_SERVICE_URL: http://reference-service:8001
       EVALUATION_SERVICE_URL: http://evaluation-service:8002
     depends_on:
       mysql:
         condition: service_healthy
+      ecdict-loader:
+        condition: service_completed_successfully
       reference-service:
         condition: service_healthy
       evaluation-service:
         condition: service_healthy
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
 
   frontend:
     build:
@@ -88,9 +106,10 @@ services:
     depends_on:
       - practice-service
     ports:
-      - "5173:80"
+      - "127.0.0.1:5173:80"
 
 volumes:
   mysql-data:
   kokoro-models:
   huggingface-cache:
+  ecdict-cache:

@@ -12,6 +12,7 @@ class PronunciationService:
             reference_text, accent
         )
         waveform = load_audio(audio_path)
+        print("Loading OpenPronounce phone model for evaluation", flush=True)
         heard, confidences = transcribe_phones(
             waveform,
             sampling_rate=16000,

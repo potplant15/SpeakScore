@@ -18,6 +18,7 @@ htmlcov/
 # Local environment and editor files
 .env
 .env.*
+!.env.example
 .idea/
 .vscode/
 

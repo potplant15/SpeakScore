@@ -11,6 +11,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
+      - name: Prepare Compose environment
+        run: cp .env.example .env
+
       - name: Build and start the stack
         run: docker compose up --detach --build
 

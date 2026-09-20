@@ -23,6 +23,12 @@ Evaluation Service: http://evaluation-service:8002
 
 ECDICT can be initialized with `src/main/resources/ecdict-schema.sql` and MySQL `LOAD DATA LOCAL INFILE`.
 
+When MySQL starts with a new Docker volume, Compose mounts this schema into
+MySQL's initialization directory automatically. Existing volumes are not
+reinitialized; the Practice Service entity also contains the complete ECDICT
+structure so Hibernate can add missing columns when `JPA_DDL_AUTO=update` is
+enabled.
+
 ## Run locally
 
 ```bash

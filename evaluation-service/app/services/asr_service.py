@@ -14,6 +14,11 @@ class ASRService:
     def _get_model(self) -> WhisperModel:
         # Load the Whisper model only when the first evaluation is requested.
         if self.model is None:
+            print(
+                f"Loading Whisper model: {self.model_name} "
+                f"(device={self.device}, compute_type={self.compute_type})",
+                flush=True,
+            )
             self.model = WhisperModel(
                 self.model_name,
                 device=self.device,

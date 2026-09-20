@@ -3,6 +3,20 @@ SpeakScore is an English speaking practice tool that reads sentences aloud, reco
 
 The service is currently available at [https://www.speakscore.icu/](https://www.speakscore.icu/).
 
+## Project summary
+
+SpeakScore is a microservice-based English speaking practice tool built with
+Vue, Spring Boot, FastAPI, Kokoro, Whisper, OpenPronounce and MySQL. It provides
+sentence input, accent and voice selection, reference audio, IPA guidance,
+speech recording or audio upload, and pronunciation evaluation. The project is
+containerized with Docker Compose and finally deployed on a Tencent Cloud
+Lightweight Application Server with 2 vCPUs and 4 GB RAM. Cloudflare provides
+the domain DNS, traffic protection and public access layer, while Nginx and
+HTTPS handle requests on the server. The current version has also been
+iterated based on user feedback, especially around mobile access, microphone
+compatibility, audio upload, autocomplete and the readability of pronunciation
+feedback.
+
 ## Project structure
 
 ```text
@@ -10,6 +24,7 @@ frontend/             Vue frontend
 practice-service/     Spring Boot business service
 reference-service/    Kokoro reference-audio and IPA service
 evaluation-service/   Whisper and OpenPronounce evaluation service
+ecdict-loader/        ECDICT dictionary download and MySQL import utility
 compose.yml           Docker Compose deployment configuration
 ```
 
@@ -96,8 +111,16 @@ The default port is `8002`.
 From the project root:
 
 ```bash
+cp .env.example .env
+# Edit .env and set real database passwords.
 docker compose build
 docker compose up -d
+```
+
+On a server with a pre-downloaded Whisper model, set this value in `.env`:
+
+```env
+WHISPER_MODEL_DIR=/home/ubuntu/whisper-model
 ```
 
 Check service status:
@@ -284,6 +307,46 @@ sudo systemctl reload nginx
 ```
 
 The application can then be accessed at `https://www.example.com`. HTTPS is required by browsers for microphone access.
+
+## Automatic ECDICT initialization
+
+Docker Compose includes an `ecdict-loader` one-shot service. After MySQL is
+healthy, it creates or upgrades the `ecdict` table, downloads ECDICT into the
+`ecdict-cache` volume, and imports it only when the table is empty. Later starts
+reuse the cached CSV and skip the import when rows already exist. Practice
+Service waits for this initialization job to finish before starting.
+
+The loader retries the download three times. If MySQL or the download source
+is unavailable, it prints a clear warning and exits successfully so the rest of
+the application can start without autocomplete data.
+
+The default source is:
+
+```text
+https://raw.githubusercontent.com/skywind3000/ECDICT/master/ecdict.csv
+```
+
+The loader does not block the rest of the application if ECDICT cannot be
+downloaded. It prints a clear `WARNING` and the application starts without
+autocomplete data. Inspect it with:
+
+```bash
+docker compose logs ecdict-loader
+```
+
+Verify the imported row count with:
+
+```bash
+docker compose exec mysql \
+  mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" \
+  -e "SELECT COUNT(*) AS total FROM ecdict;"
+```
+
+To use a different mirror, set `ECDICT_URL` in `.env`. On a restricted server,
+download `ecdict.csv` on another machine and place it in the `ecdict-cache`
+volume before restarting the loader. The Kokoro and Evaluation services also
+print explicit warnings when their local model files or Hugging Face cache are
+missing.
 
 Cloudflare Quick Tunnel is useful for temporary testing, but it is not required after the domain and HTTPS certificate are configured. Stop a temporary tunnel with:
 

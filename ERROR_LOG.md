@@ -51,3 +51,14 @@
 - 容器内部页面返回 200，但宿主机 5173 连接重置。通过检查 Nginx 监听、端口映射、容器日志并重新创建 frontend 容器解决。
 - Cloudflare Quick Tunnel 每次重启可能生成新的 trycloudflare.com 地址，通过 docker logs speakscore-tunnel 查看。
 
+## 9. 域名、Cloudflare Tunnel 与 HTTPS
+
+- 中国大陆服务器直接绑定域名可能遇到 ICP 备案限制。临时演示阶段使用 Cloudflare Tunnel 代理到现有服务器，长期生产仍应按实际部署和服务类型完成合规备案。
+- 新版 Cloudflare 通过 `Domains → Overview → Connect a domain` 接入已有域名。添加的是根域名，不是 `www` 子域名。
+- 域名注册商只负责修改 Nameserver。Cloudflare 接管后由 Cloudflare 管理 DNS 记录；切换时保留 Cloudflare Nameserver，并确认 DNSSEC 已关闭。
+- 访问域名曾返回 `HTTP/2 525`。原因是旧 A 记录仍指向云服务器，Cloudflare 继续直接进行源站 HTTPS 握手，而不是通过 Tunnel 访问本地 HTTP 服务。删除 Cloudflare 中旧的 `@`、`www` A 记录，并在 Tunnel 中配置 Published application 后恢复。
+- cloudflared 容器如果不使用 host 网络，容器内的 `127.0.0.1` 指向容器本身。正确启动方式需要加入 `--network host`，使 Tunnel 可以访问云服务器的 `127.0.0.1:5173`。
+- Cloudflare Tunnel 记录显示为 Tunnel 且处于 Proxied 状态时，Cloudflare 可能隐藏或扁平化 CNAME，因此 `dig CNAME www.example.com` 为空不一定表示 DNS 错误，应结合 Cloudflare DNS 页面、Tunnel 状态和 HTTPS 请求判断。
+- `ICMP proxy is disabled`、接收缓冲区不足、部分 UDP pre-check 失败等日志通常不是致命错误。使用 `--protocol http2` 后，只要出现 `Registered tunnel connection`，Tunnel 仍可正常工作。
+- Tunnel Token 具有账户访问权限。Token 泄露后必须在 Cloudflare 控制台轮换，并使用新 Token 重建容器。
+- Cloudflare 人机验证页是 `Managed Challenge`，可以在 `Security → Security rules → Custom rules` 中针对首页配置。不要一开始匹配所有请求，否则可能影响 API、音频和评分上传；页面内嵌式验证则需要使用 Turnstile 并修改前后端代码。

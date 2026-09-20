@@ -16,11 +16,20 @@ public class DictionaryEntry {
     private String phonetic;
 
     @Column(columnDefinition = "TEXT")
+    private String definition;
+
+    @Column(columnDefinition = "TEXT")
     private String translation;
 
     @Column(length = 64)
     private String pos;
 
+    private Integer collins;
+    private Integer oxford;
+    private String tag;
+    private String exchange;
+    private String detail;
+    private String audio;
     private Integer bnc;
     private Integer frq;
 
@@ -28,8 +37,15 @@ public class DictionaryEntry {
 
     public String getWord() { return word; }
     public String getPhonetic() { return phonetic; }
+    public String getDefinition() { return definition; }
     public String getTranslation() { return translation; }
     public String getPos() { return pos; }
+    public Integer getCollins() { return collins; }
+    public Integer getOxford() { return oxford; }
+    public String getTag() { return tag; }
+    public String getExchange() { return exchange; }
+    public String getDetail() { return detail; }
+    public String getAudio() { return audio; }
     public Integer getBnc() { return bnc; }
     public Integer getFrq() { return frq; }
 }

@@ -62,3 +62,4 @@
 - `ICMP proxy is disabled`、接收缓冲区不足、部分 UDP pre-check 失败等日志通常不是致命错误。使用 `--protocol http2` 后，只要出现 `Registered tunnel connection`，Tunnel 仍可正常工作。
 - Tunnel Token 具有账户访问权限。Token 泄露后必须在 Cloudflare 控制台轮换，并使用新 Token 重建容器。
 - Cloudflare 人机验证页是 `Managed Challenge`，可以在 `Security → Security rules → Custom rules` 中针对首页配置。不要一开始匹配所有请求，否则可能影响 API、音频和评分上传；页面内嵌式验证则需要使用 Turnstile 并修改前后端代码。
+- 当前最终部署架构已经统一为：Cloudflare DNS → Cloudflare Named Tunnel → `cloudflared --network host --protocol http2` → `127.0.0.1:5173` → 前端 Nginx。此前的服务器 A 记录、Certbot 和 Nginx 直接回源方案属于中间尝试，不再作为当前公网入口；Cloudflare Tunnel 的 Published Application 负责域名到本机前端的转发。

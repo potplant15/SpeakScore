@@ -12,8 +12,8 @@
 - 模型下载：本地和云服务器多次遇到 GitHub、Hugging Face 及 Debian/PyPI 下载不稳定的问题。最终采用 Docker volume 缓存、镜像地址、离线模型目录挂载和本地下载后上传等方式，避免服务运行时重复下载模型。
 - Docker 构建：Reference Service 和 Evaluation Service 存在较大的 Python 和系统依赖，构建时间较长。最终保留独立 Dockerfile 和 Docker Compose 服务编排，并通过缓存卷复用模型资源。
 - 微服务联调：Practice Service 需要同时调用 Reference Service 和 Evaluation Service，期间出现音频返回错误报告、multipart 请求失败、模型加载超时和 Nginx 499 等问题。最终统一由 Practice Service 协调业务流程，并补充服务健康检查、错误提示和超时排查方式。
-- 浏览器录音：公网 HTTP 环境无法稳定使用麦克风，曾使用 Cloudflare Quick Tunnel 临时提供 HTTPS，最终配置正式域名、Let's Encrypt 证书和 Nginx 反向代理。
-- 云端访问：曾遇到前端容器监听异常、Cloudflare Tunnel 回源地址不一致和旧 Docker 镜像未更新等问题，最终将公网入口统一收敛到 HTTPS 域名，并通过重新构建和强制重建服务更新版本。
+- 浏览器录音：公网 HTTP 环境无法稳定使用麦克风，曾使用 Cloudflare Quick Tunnel 临时提供 HTTPS，随后尝试配置正式域名、Let's Encrypt 证书和 Nginx 反向代理。
+- 云端访问：曾遇到前端容器监听异常、Cloudflare Tunnel 回源地址不一致、HTTP 525 和备案限制等问题。最终放弃直接回源到服务器的域名方案，改为 Cloudflare Named Tunnel，并通过 host 网络让 Tunnel 访问服务器本机的前端端口。
 - 用户输入与反馈：根据问卷反馈增加音频文件上传能力，并加入格式、大小、时长和音频可识别性校验；评分错误提示改为 `Expected`、`Heard` 和针对性解释，降低学习者理解成本。
 
 ## 关键判断与假设
@@ -23,7 +23,7 @@
 - Evaluation Service 选择 Python、FastAPI、Whisper 和 OpenPronounce，分别负责内容识别和发音音素评估；将模型计算与业务服务分离，可以独立处理模型加载、缓存和 CPU 资源限制。
 - Frontend 选择 Vue 3 和 Vite，主要考虑其组件化开发体验、构建速度和对录音、音频播放、响应式布局等浏览器能力的支持。
 - 使用 Docker 和 Docker Compose 管理服务，是为了统一本地、GitHub Actions 和云服务器的运行环境，并通过 volume 保存模型缓存和数据库数据。
-- 使用 Nginx 作为公网入口，是为了统一处理 HTTPS、静态前端资源和 API 反向代理，减少内部服务直接暴露公网的风险。
+- 最终公网入口采用 Cloudflare DNS 和 Named Tunnel；cloudflared 通过 `--network host` 和 HTTP/2 访问服务器本机的前端端口，Nginx/Certbot 直连方案作为曾经尝试过的中间方案保留在开发过程记录中。
 - 第一版优先保证“标准句子、参考音频、用户音频、评分结果”的可运行链路，因此没有继续扩展数据库业务和复杂模型训练。
 - 录音文件不长期保存到数据库，评估完成后由服务清理临时文件；系统主要保存练习信息和评分结果。
 - 模型文件不提交到 Git 仓库，使用 Docker volume 或服务器本地目录挂载，以控制仓库体积和部署成本。
@@ -40,7 +40,7 @@
 - 音频文件上传目前只支持有限格式和大小，无法保证所有编码格式都能被浏览器和后端正确解码。
 - 自动补全依赖 ECDICT 词典和后端查询，暂时主要提供前缀联想，不具备基于上下文的句子预测能力；网络延迟或词典服务异常时，提示可能变慢或不可用。
 - 当前练习历史和趋势分析、错误发音专项训练、中文界面及更细粒度的音节评分仍属于后续优化方向。
-- Cloudflare Tunnel 可作为快速上线或临时入口，但正式生产环境仍需要持续运行的命名 Tunnel、稳定域名配置和合规的服务器部署方案。
+- 当前使用 Cloudflare Named Tunnel 作为公网入口，依赖 Tunnel 容器持续运行、稳定的 Cloudflare DNS 配置和有效的 Tunnel Token；这不是直接回源到腾讯云服务器的 Nginx 架构，仍需关注 Cloudflare Tunnel 的可用性和国内访问稳定性。
 
 # Development Log
 
@@ -87,12 +87,13 @@
 
 ## DAY4 / 9.20
 
-- 完成 `www.speakscore.icu` 的 DNS A 记录解析到云服务器。
-- 使用 Certbot 为域名申请并部署 Let's Encrypt HTTPS 证书。
-- 配置 Nginx 将 80/443 请求反向代理到前端容器 5173。
+- 曾尝试将 `www.speakscore.icu` 的 DNS A 记录解析到云服务器。
+- 曾使用 Certbot 为域名申请并部署 Let's Encrypt HTTPS 证书。
+- 曾配置 Nginx 将 80/443 请求反向代理到前端容器 5173；该方案属于中间部署方案。
 - 将前端、Reference Service、Evaluation Service、Practice Service 和 MySQL 的公网访问收敛到域名入口。
 - 将 5173 改为仅监听服务器本机，关闭 8001、8002、8080 和 3306 的公网访问。
-- 停止 Cloudflare Quick Tunnel，改用服务器 Nginx 和正式域名提供 HTTPS 访问。
+- 由于直接回源时出现 Cloudflare 525、备案限制和源站 HTTPS 握手问题，删除旧的 `@`、`www` A 记录，改用 Cloudflare Named Tunnel 的 Published Application。
+- 最终架构为：Cloudflare DNS → Cloudflare Named Tunnel → `cloudflared --network host --protocol http2` → `127.0.0.1:5173` → 前端 Nginx → Practice Service 及其他内部服务。
 - 收集并分析用户体验反馈问卷，确定移动端适配、评分解释、中文提示和练习历史为后续重点方向。
 - 为前端增加 MP3、WAV、WEBM 和 M4A 音频上传功能，作为麦克风不可用时的备用方案。
 - 增加上传文件格式、文件大小、音频时长和音频可识别性检查。
@@ -100,4 +101,4 @@
 - 优化发音错误展示，改为 `Expected`、`Heard` 和针对性解释的学习者友好格式。
 - 修复前端 Docker 镜像未及时更新导致远程页面仍显示旧版评分提示的问题，并完成重新构建说明。
 
-当前进度：SpeakScore 已具备正式域名 HTTPS 访问入口，并支持麦克风录音和音频文件上传评分；
+当前进度：SpeakScore 已通过 Cloudflare Named Tunnel 和正式域名提供 HTTPS 访问，并支持麦克风录音和音频文件上传评分；Nginx/Certbot 直连方案不作为当前公网架构。

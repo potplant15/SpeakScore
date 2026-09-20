@@ -11,8 +11,8 @@ sentence input, accent and voice selection, reference audio, IPA guidance,
 speech recording or audio upload, and pronunciation evaluation. The project is
 containerized with Docker Compose and finally deployed on a Tencent Cloud
 Lightweight Application Server with 2 vCPUs and 4 GB RAM. Cloudflare provides
-the domain DNS, traffic protection and public access layer, while Nginx and
-HTTPS handle requests on the server. The current version has also been
+the domain DNS, traffic protection and Named Tunnel public access layer, which
+forwards requests to the server's local frontend port. The current version has also been
 iterated based on user feedback, especially around mobile access, microphone
 compatibility, audio upload, autocomplete and the readability of pronunciation
 feedback.
@@ -259,7 +259,8 @@ Do not commit model files, access tokens, passwords or private server paths to G
 
 ## Production domain deployment
 
-For production access, point the domain A record to the cloud server public IP. Only expose the web entry points publicly:
+For a direct-origin deployment without Cloudflare Tunnel, point the domain A
+record to the cloud server public IP. Only expose the web entry points publicly:
 
 ```text
 TCP 80
@@ -348,7 +349,11 @@ volume before restarting the loader. The Kokoro and Evaluation services also
 print explicit warnings when their local model files or Hugging Face cache are
 missing.
 
-Cloudflare Quick Tunnel is useful for temporary testing, but it is not required after the domain and HTTPS certificate are configured. Stop a temporary tunnel with:
+The current production deployment uses a Cloudflare Named Tunnel. Configure
+the Published Application service as `http://127.0.0.1:5173` and run
+`cloudflared` with host networking so that the tunnel can reach the host-side
+frontend port. Cloudflare Quick Tunnel is only for temporary testing. Stop a
+temporary tunnel with:
 
 ```bash
 docker rm -f speakscore-tunnel 2>/dev/null || true

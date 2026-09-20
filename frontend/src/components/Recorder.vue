@@ -9,6 +9,7 @@ const timer = computed(() => `0${Math.floor(elapsedSeconds.value / 60)}:${String
 const recordedAudioUrl = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
 const maxAudioSize = 10 * 1024 * 1024
+const minAudioDuration = 0.5
 
 watch(audioBlob, (blob) => {
   if (recordedAudioUrl.value) URL.revokeObjectURL(recordedAudioUrl.value)
@@ -20,7 +21,24 @@ async function start() {
   await startRecording()
 }
 function stop() { stopRecording(); window.setTimeout(() => audioBlob.value && emit('recorded', audioBlob.value), 0) }
-function handleFileChange(event: Event) {
+function getAudioDuration(file: File): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const audio = document.createElement('audio')
+    const url = URL.createObjectURL(file)
+    audio.preload = 'metadata'
+    audio.onloadedmetadata = () => {
+      URL.revokeObjectURL(url)
+      resolve(audio.duration)
+    }
+    audio.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error('decode'))
+    }
+    audio.src = url
+  })
+}
+
+async function handleFileChange(event: Event) {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
@@ -32,6 +50,19 @@ function handleFileChange(event: Event) {
     error.value = file.size > maxAudioSize
       ? 'Audio file is too large. Choose a file smaller than 10 MB.'
       : 'Unsupported audio format. Use MP3, WAV, WEBM, or M4A.'
+    input.value = ''
+    return
+  }
+
+  try {
+    const duration = await getAudioDuration(file)
+    if (!Number.isFinite(duration) || duration < minAudioDuration) {
+      error.value = 'Audio is too short. Record or upload at least half a second of speech.'
+      input.value = ''
+      return
+    }
+  } catch {
+    error.value = 'Audio could not be recognized. Try another MP3, WAV, WEBM, or M4A file.'
     input.value = ''
     return
   }

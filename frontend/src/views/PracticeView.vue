@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from 'vue'
+import { isAxiosError } from 'axios'
 import AccentSelector from '@/components/AccentSelector.vue'
 import Recorder from '@/components/Recorder.vue'
 import ReferencePlayer from '@/components/ReferencePlayer.vue'
@@ -45,8 +46,21 @@ async function submitRecording(audio: Blob) {
   if (!practice.value) return
   evaluating.value = true
   error.value = ''
-  try { result.value = await evaluatePractice(practice.value.id, audio); practice.value.status = 'EVALUATED' }
-  catch { error.value = 'The score could not be generated. Please try the recording again.' }
+  try {
+    result.value = await evaluatePractice(practice.value.id, audio)
+    practice.value.status = 'EVALUATED'
+  } catch (cause) {
+    if (isAxiosError(cause)) {
+      const status = cause.response?.status
+      const detail = cause.response?.data?.detail
+      if (status === 413) error.value = 'Audio file is too large. Choose a file smaller than 10 MB.'
+      else if (status === 422 && /speech|recogn/i.test(String(detail))) error.value = 'Audio could not be recognized. Try a clearer recording or another audio file.'
+      else if (status === 503) error.value = 'The scoring service is temporarily unavailable. Please try again in a moment.'
+      else error.value = 'The score could not be generated. Please try the recording again.'
+    } else {
+      error.value = 'The scoring service is temporarily unavailable. Please try again in a moment.'
+    }
+  }
   finally { evaluating.value = false }
 }
 

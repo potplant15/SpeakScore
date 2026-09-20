@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { EvaluationResult } from '@/types/practice'
-defineProps<{ result: EvaluationResult }>()
+const props = defineProps<{ result: EvaluationResult }>()
+const firstError = computed(() => props.result.details?.pronunciation_errors?.[0])
 </script>
 
 <template>
@@ -15,9 +17,15 @@ defineProps<{ result: EvaluationResult }>()
       <div><span>Fluency</span><strong>{{ result.fluency.toFixed(1) }}</strong></div>
     </div>
     <div class="heard-line"><span class="eyebrow">We heard</span><p>{{ result.recognizedText || 'No speech detected' }}</p></div>
-    <div v-if="result.details?.pronunciation_errors?.length" class="coaching-note">
+    <div v-if="firstError" class="coaching-note">
       <span class="note-pin">!</span>
-      <p><strong>Pronunciation detail:</strong> {{ result.details.pronunciation_errors[0].word }} — heard <b>/{{ result.details.pronunciation_errors[0].heard || '—' }}/</b>, expected <b>/{{ result.details.pronunciation_errors[0].expected || '—' }}/</b>.</p>
+      <div class="pronunciation-detail">
+        <strong>{{ firstError.word }}</strong>
+        <span>Expected: <b>/{{ firstError.expected || '—' }}/</b></span>
+        <span>Heard: <b>/{{ firstError.heard || '—' }}/</b></span>
+        <small>The sound was closer to <b>/{{ firstError.heard || '—' }}/</b>. Try keeping the target sound in <em>{{ firstError.word }}</em>.</small>
+        <span class="listen-detail">▶ Listen to the reference audio above</span>
+      </div>
     </div>
   </section>
 </template>

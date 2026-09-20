@@ -40,7 +40,13 @@ async def evaluate(
                     )
                 temp_file.write(chunk)
 
-        transcription = await run_in_threadpool(asr_service.transcribe, temp_path)
+        try:
+            transcription = await run_in_threadpool(asr_service.transcribe, temp_path)
+        except (RuntimeError, OSError, ValueError) as exc:
+            raise HTTPException(
+                status_code=422,
+                detail="Audio could not be recognized",
+            ) from exc
 
         if not transcription["words"]:
             raise HTTPException(status_code=422, detail="No speech detected")
